@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título de la página y de la vista previa (WhatsApp) -->
+    <title>Mi Agenda (v.01)</title>
+    <meta property="og:title" content="Registro Académico" />
+    <!-- Descripción corta y atractiva -->
+    <meta property="og:description" content="Agenda de mis contactos >principal-DCyT<" />
+    <!-- Imagen que se muestra en WhatsApp (logo o imagen destacada, 800x418 px recomendado) -->
+    <meta property="og:image" content="https://mi-agenda-v01.vercel.app/resources/logo.png" />
+    <!-- URL del proyecto -->
+    <meta property="og:url" content="https://mi-agenda-v01.vercel.app" />
+    <!-- Tipo de contenido -->
+    <meta property="og:type" content="website" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./resources/favicon.png">
+    <!-- Estilos CSS -->
+    <link rel="stylesheet" href="styles.css?v251103-1750" />
+</head>
+
+<body>
+    <h3 style="width: 320px;">administrador</h3>
+    <section id="principal">
+        <div>
+            <button id="principal_btJurado">Jurado</button>
+            <button id="principal_btPuntuacion">Resultado final</button>
+        </div>
+        
+    </section>
+    <section id="jurado" >
+        <h3>Gestion de Jurado</h3>
+          <h3><span id="jurado_lblOpcion"></span> jurado</h3>
+          <div class="ficha">
+        <label >
+            <input type="text" id="jurado_inNombre" placeholder="Nombre"></input>
+            </label>
+    <label>
+       
+    <select id="jurado_inCategoria" name="categoria">
+    
+    <option value="" disabled selected>-- Elige una categoría --</option>
+    
+    <option value="Maestro">Maestro (20 pts)</option>
+    <option value="Autoridad">Autoridad (5 pts)</option>
+    <option value="Docente">Docente (5 pts)</option>
+    <option value="Invitado">Invitado (1 pto)</option>
+    
+    </select>
+    
+    </label>
+     <div> 
+        <button id="jurado_btAgregar">Agregar jurado</button>
+        <button id="jurado_btVolver">Volver</button>
+     </div>
+            
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Nombre</th>
+                    <th style="width: 80px;">Categoria</th>
+                    <th style="width: 100px;">Opcion</th>
+                </tr>
+            </thead>
+            <tbody id="jurado_divJurado"> </tbody>
+        </table>
+        
+    </section>
+        <section id="puntuacion" >
+        <h3>Gestion de puntuacion</h3>
+          <label>
+                        <input type="text" id="puntuacion_inJurado" placeholder="Jurado"></input>
+            </label>
+        <label>
+                        <select id="puntuacion_inEquipo" name="equipo">
+    
+    <option value="" disabled selected>-- Elige un equipo --</option>
+    
+    <option value="TheGitGuardians">TheGitGuardians</option>
+    <option value="SigmaDev">SigmaDev</option>
+    <option value="ATLAS">ATLAS</option>
+    <option value="THE CODE RANGERS">THE CODE RANGERS</option>
+    <option value="Advanced One Logic">Advanced One Logic</option>
+    <option value="HyperLinkBlocked">HyperLinkBlocked</option>
+    <option value="Bug Busters">Bug Busters</option>
+    <option value="PowerSquad">PowerSquad</option>
+    <option value="CodeBreakers">CodeBreakers</option>
+    <option value="TeraNexus Core">TeraNexus Core</option>
+    <option value="Brothers of Matrix">Brothers of Matrix</option>
+    <option value="InitCode">InitCode</option>
+    <option value="SevenPixels&TwoBugs">SevenPixels&TwoBugs</option>
+    
+    </select>
+    </label>
+    <label>
+            <input type="number" id="puntuacion_inPuntuacionMax" placeholder="Puntuacion maxima"></input>
+    </label>
+     <label >
+           <input type="text" id="puntuacion_inObservacion" placeholder="Observacion de puntuacion"></input>
+    </label>
+        <br>
+        <button id="puntuacion_btAgregar">Agregar puntuacion</button>
+        <button id="puntuacion_btVolver">Volver</button>
+    </section>
+
+    <section id="reporte" >
+        <h3>Resultado Final</h3>
+        <table style="margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">Seccion</th>
+                    <th style="width: 150px;">Equipo</th>
+                    <th style="width: 150px;">Porcentaje</th>
+                    <th style="width: 100px;">observacion</th>
+                </tr>
+            </thead>
+            <tbody id="puntuacion_divPuntuacion"> </tbody>
+        </table>
+    </section>
+    <script type="module">
+        import Cl_index from "./dist/Cl_index.js";
+        new Cl_index()
+    </script>
+</body>
+
+</html>
