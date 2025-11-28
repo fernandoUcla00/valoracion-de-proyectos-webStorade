@@ -17,16 +17,6 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
             puntuacionMax: 0,
             observacion: "",
         });
-        this.inPuntuacionMax = this.crearHTMLInputElement("inPuntuacionMax", {
-            oninput: () => {
-                this.inPuntuacionMax.value = this.Puntuacion.puntuacionMax = this.inPuntuacionMax.value
-                    .toUpperCase()
-                    .trim();
-                this.refresh();
-            },
-            refresh: () => (this.inPuntuacionMax.style.borderColor = this.Puntuacion.PuntuacionOk ? "" : "red"),
-        });
-        this.inPuntuacionMax.disabled = this.opcion === opcionFicha.edit;
         this.inJurado = this.crearHTMLInputElement("inJurado", {
             oninput: () => {
                 this.inJurado.value = this.Puntuacion.Jurado = this.inJurado.value
@@ -37,20 +27,27 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
             refresh: () => (this.inJurado.style.borderColor = this.Puntuacion.JuradoOk ? "" : "red"),
         });
         this.inJurado.disabled = this.opcion === opcionFicha.edit;
-        this.inEquipo = this.crearHTMLInputElement("inEquipo", {
-            oninput: () => {
-                this.inEquipo.value = this.Puntuacion.equipo = this.inEquipo.value
+        this.inEquipo = this.crearHTMLElement("inEquipo", {
+            type: tHTMLElement.SELECT,
+            onchange: () => {
+                this.Puntuacion.equipo = this.inEquipo.value
                     .trim()
                     .toUpperCase();
                 this.refresh();
             },
             refresh: () => (this.inEquipo.style.borderColor = this.Puntuacion.equipo ? "" : "red"),
         });
+        this.inPuntuacionMax = this.crearHTMLInputElement("inPuntuacionMax", {
+            oninput: () => {
+                this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber;
+                this.refresh();
+            },
+            refresh: () => (this.inPuntuacionMax.style.borderColor = this.Puntuacion.PuntuacionMaxOk ? "" : "red"),
+        });
+        this.inPuntuacionMax.disabled = this.opcion === opcionFicha.edit;
         this.inObservacion = this.crearHTMLInputElement("inObservacion", {
             oninput: () => {
-                this.inObservacion.value = this.Puntuacion.observacion = this.inObservacion.value
-                    .trim()
-                    .toUpperCase();
+                this.inObservacion.value = this.Puntuacion.observacion = this.inObservacion.value;
                 this.refresh();
             },
             refresh: () => (this.inObservacion.style.borderColor = this.Puntuacion.observacion ? "" : "red"),
@@ -64,10 +61,6 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         this.btCancelar = this.crearHTMLButtonElement("btVolver", {
             onclick: () => this.controlador.activarVista({ vista: "principal" }),
         });
-        this.divPuntuacion = this.crearHTMLElement("divPuntuacion", {
-            type: tHTMLElement.CONTAINER,
-            refresh: () => this.mostrarPuntuacion(),
-        });
     }
     Agregar() {
         if (this.opcion === opcionFicha.add)
@@ -75,24 +68,37 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
                 dtPuntuacion: this.Puntuacion.toJSON(),
                 callback: (error) => {
                     if (!error)
-                        this.controlador.activarVista({ vista: "Puntuacion" });
+                        this.controlador.activarVista({ vista: "puntuacion" });
                     else
                         alert(`Error: ${error}`);
                 },
             });
     }
-    mostrarPuntuacion() {
+    addJurado() {
         var _a;
-        this.divPuntuacion.innerHTML = "";
-        let Puntuacion = (_a = this.controlador) === null || _a === void 0 ? void 0 : _a.dtPuntuacion;
-        if (!Puntuacion)
-            return;
-        Puntuacion.forEach((Puntuacion, index) => (this.divPuntuacion.innerHTML += `<tr>
-              td>${Puntuacion.pocicionEnClasificacion()}</td>
-              <td>${Puntuacion.equipo}</td>
-              <td>${Puntuacion.calcularPromedio()}</td>
-              <td>${Puntuacion.observacion}
-          </tr>`));
+        // Si el botón tiene addJurado, el flujo correcto debe ser primero agregar y luego limpiar/refrescar.
+        // Asumiendo que addJurado es solo para iniciar el modo ADD (como en el repositorio de referencia):
+        (_a = this.controlador) === null || _a === void 0 ? void 0 : _a.activarVista({
+            vista: "puntuacion",
+            opcion: opcionFicha.add,
+        });
+    }
+    AgregarPuntuacion() {
+        if (this.opcion === opcionFicha.add)
+            this.controlador.addPuntuacion({
+                dtPuntuacion: this.Puntuacion.toJSON(),
+                callback: (error) => {
+                    if (!error) {
+                        // Limpiar inputs después de guardar
+                        this.Puntuacion.Jurado = this.inJurado.value = "";
+                        this.Puntuacion.equipo = this.inEquipo.value = "";
+                        this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber || 0;
+                        this.Puntuacion.observacion = this.inObservacion.value = "";
+                    }
+                    else
+                        alert(`Error: ${error}`);
+                },
+            });
     }
     show({ ver = false, Puntuacion = new Cl_mPuntuacion({
         id: 0,
@@ -117,7 +123,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         super.show({ ver });
         if (opcion) {
             this.opcion = opcion;
-            this.Puntuacion.puntuacionMax = this.inPuntuacionMax.value = Puntuacion.puntuacionMax;
+            this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber = Puntuacion.puntuacionMax;
             this.Puntuacion.equipo = this.inEquipo.value = Puntuacion.equipo;
             this.refresh();
         }

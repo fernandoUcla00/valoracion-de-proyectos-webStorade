@@ -1,6 +1,7 @@
 import Cl_vJurado from "./Cl_vJurado.js";
 import Cl_vPuntuacion from "./Cl_vPuntuacion.js";
 import Cl_vGeneral from "./tools/Cl_vGeneral.js";
+import { opcionFicha } from "./tools/core.tools.js";
 export default class principal extends Cl_vGeneral {
     constructor() {
         super({ formName: "principal" });
@@ -12,7 +13,7 @@ export default class principal extends Cl_vGeneral {
             onclick: () => this.controlador.activarVista({ vista: "jurado" }),
         });
         this.btPuntuacion = this.crearHTMLButtonElement("btPuntuacion", {
-            onclick: () => this.controlador.activarVista({ vista: "puntuacion" }),
+            onclick: () => this.controlador.activarVista({ vista: "puntuacion", opcion: opcionFicha.add }),
         });
     }
     set controlador(controlador) {

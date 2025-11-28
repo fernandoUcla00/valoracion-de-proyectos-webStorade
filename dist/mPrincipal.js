@@ -1,4 +1,5 @@
 import Cl_dcytDb from "https://gtplus.net/forms2/dcytDb/api/Cl_dcytDb.php?v251110-2150";
+import Cl_mPuntuacion from "./Cl_mPuntuacion.js";
 import Cl_mJurado from "./Cl_mJurado.js";
 export default class mPrincipal {
     constructor() {
@@ -48,71 +49,55 @@ export default class mPrincipal {
           },
         });
     }**/
-    /**deleteJurado({
-      nombre,
-      callback,
-    }: {
-      nombre: string;
-      callback: (error: string | boolean) => void;
-    }): void {
-      let indice = this.Jurados.findIndex((m) => m.categoria === nombre);
-      // Verificar si la Jurado existe
-      if (indice === -1) callback(`La Jurado con código ${nombre} no existe.`);
-      else {
-        // Verificar si están inscritos Puntuacions en la Jurado
-        let algunInscrito = false;
-        for (let Puntuacion of this.Puntuacions)
-          if (Puntuacion.inscritoEn(nombre)) {
-            algunInscrito = true;
-            break;
-          }
-        if (algunInscrito)
-          callback(
-            `No se puede eliminar "${nombre}" (inscrita por un Puntuacion)`
-          );
-        // Eliminar la Jurado
-        else {
-          this.db.deleteRecord({
-            tabla: this.tbJurado,
-            object: this.Jurados[indice],
-            callback: ({ objects: Jurados, error }) => {
-              if (!error) this.llenarJurados(Jurados);
-              callback?.(error);
-            },
-          });
+    deleteJurado({ nombre, callback, }) {
+        console.log("🔍 Modelo - Intentando eliminar jurado:", nombre);
+        // VALIDACIÓN: Verificar que el nombre no esté vacío
+        if (!nombre || nombre.trim() === "") {
+            console.error("❌ Error: Nombre está vacío en el modelo");
+            callback("El nombre del jurado está vacío");
+            return;
         }
-      }
-    }**/
-    /**addPuntuacion({
-      dtPuntuacion,
-      callback,
-    }: {
-      dtPuntuacion: iPuntuacion;
-      callback: (error: string | boolean) => void;
-    }): void {
-      let existe = this.Puntuacions.find((e) => e.cedula === dtPuntuacion.cedula);
-      if (existe)
-        callback(`El Puntuacion con cedula ${dtPuntuacion.cedula} ya existe.`);
-      let Puntuacion = new Cl_mPuntuacion(dtPuntuacion);
-      if (!Puntuacion.PuntuacionOk) callback(Puntuacion.PuntuacionOk);
-      this.Puntuacions.push(Puntuacion);
-      callback(false);
+        const nombreTrim = nombre.trim();
+        console.log("🔍 Buscando jurado con nombre:", nombreTrim);
+        let indice = this.Jurados.findIndex((m) => m.nombre === nombreTrim);
+        // Verificar si la Jurado existe
+        if (indice === -1) {
+            console.error("❌ Jurado no encontrado:", nombreTrim);
+            console.log("🔍 Jurados disponibles:", this.Jurados.map(j => j.nombre));
+            callback(`el Jurado con Nombre ${nombreTrim} no existe.`);
+        }
+        else {
+            // Verificar si están inscritos Puntuacions en la Jurado
+            // Eliminar la Jurado
+            this.db.deleteRecord({
+                tabla: this.tbJurado,
+                object: this.Jurados[indice],
+                callback: ({ objects: Jurados, error }) => {
+                    if (!error)
+                        this.llenarJurados(Jurados);
+                    callback === null || callback === void 0 ? void 0 : callback(error);
+                },
+            });
+        }
     }
-    deletePuntuacion({
-      cedula,
-      callback,
-    }: {
-      cedula: number;
-      callback: (error: string | boolean) => void;
-    }): void {
-      let indice = this.Puntuacions.findIndex((e) => e.cedula === cedula);
-      if (indice === -1)
-        callback(`El Puntuacion con cedula ${cedula} no existe.`);
-      if (this.Puntuacions[indice].cntJurados > 0)
-        callback(`No se puede eliminar "${cedula}" (inscrito en Jurados)`);
-      this.Puntuacions.splice(indice, 1);
-      callback(false);
-    }**/
+    // codigo para Puntuacion
+    addPuntuacion({ dtPuntuacion, callback, }) {
+        let Puntuacion = new Cl_mPuntuacion(dtPuntuacion);
+        // Validar que la puntuación sea correcta
+        if (!Puntuacion.PuntuacionOk)
+            callback("La puntuación no es correcta.");
+        else
+            this.db.addRecord({
+                tabla: this.tbPuntuacion,
+                registroAlias: dtPuntuacion.equipo,
+                object: Puntuacion,
+                callback: ({ id, objects: Puntuaciones, error }) => {
+                    if (!error)
+                        this.llenarPuntuacion(Puntuaciones);
+                    callback === null || callback === void 0 ? void 0 : callback(error);
+                },
+            });
+    }
     dtJurado() {
         return this.Jurados.map((m) => m.toJSON());
     }
@@ -133,12 +118,12 @@ export default class mPrincipal {
                 else
                     this.db.listRecords({
                         tabla: this.tbPuntuacion,
-                        callback: ({ Puntuacions, error }) => {
+                        callback: ({ Puntuacion, error }) => {
                             if (error)
                                 callback(`Error cargando Puntuacions: ${error}`);
                             else {
                                 this.llenarJurados(objects !== null && objects !== void 0 ? objects : []);
-                                //this.llenarPuntuacion(Puntuacions ?? []);
+                                this.llenarPuntuacion(Puntuacion !== null && Puntuacion !== void 0 ? Puntuacion : []);
                                 callback(false);
                             }
                         },
@@ -149,5 +134,9 @@ export default class mPrincipal {
     llenarJurados(Jurados) {
         this.Jurados = [];
         Jurados.forEach((Jurado) => this.Jurados.push(new Cl_mJurado(Jurado)));
+    }
+    llenarPuntuacion(Puntuacion) {
+        this.Puntuacion = [];
+        Puntuacion.forEach((Puntuacion) => this.Puntuacion.push(new Cl_mPuntuacion(Puntuacion)));
     }
 }

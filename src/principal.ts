@@ -23,7 +23,7 @@ export default class principal extends Cl_vGeneral {
     });
    
     this.btPuntuacion = this.crearHTMLButtonElement("btPuntuacion", {
-      onclick:() => this.controlador!.activarVista({ vista: "puntuacion" }),
+      onclick:() => this.controlador!.activarVista({ vista: "puntuacion", opcion: opcionFicha.add }),
     });
     
   }
@@ -48,7 +48,5 @@ export default class principal extends Cl_vGeneral {
     this.vJurado.show({ ver: vista === "jurado", Jurado: objeto, opcion });
     this.vPuntuacion.show({ ver: vista === "puntuacion" });
     
-    
-
   }
 }

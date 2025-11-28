@@ -22,19 +22,13 @@ export default class Cl_controlador {
         dtJurado,
         callback,
       });
+    }*/
+    deleteJurado({ nombre, callback, }) {
+        this.modelo.deleteJurado({
+            nombre,
+            callback,
+        });
     }
-    /**deleteJurado({
-      codigo,
-      callback,
-    }: {
-      codigo: string;
-      callback: (error: string | boolean) => void;
-    }): void {
-      this.modelo.deleteJurado({
-        codigo,
-        callback,
-      });
-    }**/
     Jurado(codigo) {
         let Jurado = this.modelo.Jurado(codigo);
         if (Jurado)
@@ -44,16 +38,24 @@ export default class Cl_controlador {
     }
     get dtJurado() {
         let dtJurado = this.modelo.dtJurado();
-        console.log("🔄 Controlador está retornando estos jurados:", dtJurado);
+        console.log("Controlador está retornando estos jurados:", dtJurado);
         dtJurado.sort((a, b) => a.nombre.localeCompare(b.nombre));
         return dtJurado;
     }
-    /* get dtPuntuacion(): iPuntuacion[] {
+    //codigo para Puntuacion
+    addPuntuacion({ dtPuntuacion, callback, }) {
+        this.modelo.addPuntuacion({
+            dtPuntuacion,
+            callback,
+        });
+    }
+    get dtPuntuacion() {
         let dtPuntuacion = this.modelo.dtPuntuacion();
-    
+        console.log("Controlador está retornando estas puntuaciones:", dtPuntuacion);
+        dtPuntuacion.sort((a, b) => a.equipo.localeCompare(b.equipo));
         return dtPuntuacion;
-      }*/
-    activarVista({ vista, opcion, objeto, }) {
-        this.vista.activarVista({ vista, opcion, objeto });
+    }
+    activarVista({ vista, opcion, objeto, puntuacion, }) {
+        this.vista.activarVista({ vista, opcion, objeto, puntuacion });
     }
 }

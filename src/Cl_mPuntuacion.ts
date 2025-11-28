@@ -53,9 +53,11 @@ export default class Cl_mPuntuacion extends Cl_mTablaWeb {
     return this.Jurado.length > 5;
   }
   get PuntuacionOk(): boolean {
-    return this.equipo.length > 0 && this.JuradoOk;
-  }
- 
+  return this.equipo.length > 0 && this.JuradoOk && this.PuntuacionMaxOk;
+}
+get PuntuacionMaxOk(): boolean {
+  return this.puntuacionMax >= 0 && this.puntuacionMax <= 100;
+}
   
   calcularPromedio(): number {
     // Lógica para calcular el promedio
