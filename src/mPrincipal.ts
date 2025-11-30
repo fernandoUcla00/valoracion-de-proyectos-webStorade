@@ -46,26 +46,63 @@ export default class mPrincipal {
         },
       });
   }
-  /**  editJurado({
-    dtJurado,
-    callback,
-  }: {
-    dtJurado: iJurado;
-    callback: (error: string | boolean) => void;
-  }): void {
-    let Jurado = new Cl_mJurado(dtJurado);
-    // Validar que la Jurado sea correcta
-        if (!Jurado.juradoOk) callback("El Jurado no es correcto.");
-        else
-          this.db.editRecord({
-        tabla: this.tbJurado,
-        object: Jurado,
-        callback: ({ objects: Jurados, error }) => {
-          if (!error) this.llenarJurados(Jurados);
-          callback?.(error);
-        },
-      });
-  }**/
+ editJurado({
+  dtJurado,
+  callback,
+}: {
+  dtJurado: iJurado;
+  callback: (error: string | boolean) => void;
+}): void {
+  let Jurado = new Cl_mJurado(dtJurado);
+  // Validar que la Jurado sea correcta
+  if (!Jurado.juradoOk) callback("El Jurado no es correcto.");
+  else
+    this.db.editRecord({
+      tabla: this.tbJurado,
+      object: Jurado,
+      callback: ({ objects: Jurados, error }) => {
+        if (!error) {
+          console.log("🔧 MODELO - Cambios guardados exitosamente");
+          console.log("🔧 MODELO - Jurados recibidos de BD:", Jurados);
+          
+          // ✅ SOLUCIÓN: Recargar todos los datos desde la BD después de editar
+          console.log("🔄 MODELO - Recargando todos los jurados desde la BD...");
+          this.db.listRecords({
+            tabla: this.tbJurado,
+            callback: ({ objects, error: listError }: iResultJurados) => {
+                         if (!listError && objects) {
+  console.log("🔄 MODELO - Datos actualizados recibidos:", objects);
+  
+  // ✅ FORZAR RECARGA COMPLETA Y ACTUALIZACIÓN
+  this.llenarJurados(objects);
+  
+  // ✅ VERIFICAR QUE LOS DATOS ESTÁN EN EL ARRAY
+  console.log("🔄 MODELO - Array Jurados actualizado:", this.Jurados.length);
+  console.log("🔄 MODELO - Jurados finales:", this.Jurados.map(j => `${j.nombre} (${j.categoria})`));
+  
+  // ✅ FORZAR ACTUALIZACIÓN DE LA VISTA
+  setTimeout(() => {
+    console.log("🔄 MODELO - Forzando recarga de la vista...");
+    this.cargar((error: string | false) => {
+      if (!error) {
+        console.log("🔄 MODELO - Vista recargada exitosamente");
+      }
+    });
+  }, 100);
+  
+  callback(false);
+            }
+
+          });
+        } else {
+          console.error("🔧 MODELO - Error al guardar cambios:", error);
+          callback(error);
+        }
+      },
+    });
+}
+
+
   deleteJurado({
     nombre,
     callback,
@@ -133,8 +170,12 @@ export default class mPrincipal {
 
 
   dtJurado(): iJurado[] {
-    return this.Jurados.map((m) => m.toJSON());
-  }
+  console.log("🔍 MODELO - dtJurado() llamado - Retornando:", this.Jurados.length, "jurados");
+  console.log("🔍 MODELO - Contenido actual:", this.Jurados.map(j => `${j.nombre} (${j.categoria})`));
+  const result = this.Jurados.map((m) => m.toJSON());
+  console.log("🔍 MODELO - dtJurado() retornando array:", result.length, "elementos");
+  return result;
+}
   dtPuntuacion(): iPuntuacion[] {
     return this.Puntuacion.map((e) => e.toJSON());
   }
@@ -160,7 +201,10 @@ export default class mPrincipal {
               }
             },
           });
+           console.log("🔄 MODELO - llenarJurados() llamado con:", this.Jurados.length, "jurados");
+        console.log("🔄 MODELO - Datos recibidos:", this.Jurados);
       },
+      
     });
   }
   llenarJurados(Jurados: iJurado[]): void {

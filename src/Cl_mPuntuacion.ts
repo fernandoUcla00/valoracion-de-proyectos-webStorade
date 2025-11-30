@@ -76,7 +76,7 @@ get PuntuacionMaxOk(): boolean {
       Jurado: this._Jurado,
       equipo: this._equipo,
       puntuacionMax: this._puntuacionMax,
-     observacion: this._observacion,
+      observacion: this._observacion,
 
      
     };

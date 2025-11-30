@@ -11,18 +11,12 @@ export default class Cl_controlador {
             callback,
         });
     }
-    /**editJurado({
-      dtJurado,
-      callback,
-    }: {
-      dtJurado: iJurado;
-      callback: (error: string | boolean) => void;
-    }): void {
-      this.modelo.editJurado({
-        dtJurado,
-        callback,
-      });
-    }*/
+    editJurado({ dtJurado, callback, }) {
+        this.modelo.editJurado({
+            dtJurado,
+            callback,
+        });
+    }
     deleteJurado({ nombre, callback, }) {
         this.modelo.deleteJurado({
             nombre,
@@ -37,9 +31,12 @@ export default class Cl_controlador {
             return null;
     }
     get dtJurado() {
+        console.log("🔍 CONTROLADOR - dtJurado getter llamado");
         let dtJurado = this.modelo.dtJurado();
-        console.log("Controlador está retornando estos jurados:", dtJurado);
+        console.log("🔍 CONTROLADOR - dtJurado llamado - Retornando:", dtJurado.length, "jurados");
+        console.log("🔍 CONTROLADOR - Jurados recibidos del modelo:", dtJurado.map(j => `${j.nombre} (${j.categoria})`));
         dtJurado.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        console.log("🔍 CONTROLADOR - Jurados ordenados:", dtJurado.map(j => `${j.nombre} (${j.categoria})`));
         return dtJurado;
     }
     //codigo para Puntuacion

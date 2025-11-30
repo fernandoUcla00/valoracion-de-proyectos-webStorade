@@ -77,32 +77,108 @@ export default class Cl_vJurado extends Cl_vGeneral {
   }
 
   Agregar() {
-    // CORRECCIÓN: Cambiar la condición para que funcione directamente
-    if (this.opcion === opcionFicha.add || this.opcion === null) {
-      console.log("Intentando agregar jurado:", this.jurado.toJSON());
-      
-      this.controlador!.addJurado({
-        dtJurado: this.jurado.toJSON(),
-        callback: (error: string | boolean) => {
-          if (!error){ 
-            console.log("Jurado agregado exitosamente");
-            
-            // Limpiar inputs después de guardar
-            this.jurado.nombre = this.inNombre.value = ""; 
-            this.jurado.categoria = this.inCategoria.value = "";
-            
-            // ACTUALIZAR LA TABLA - Esto faltaba
-            this.mostrarJurado();
-        }
-          else {
-            console.error("Error al agregar jurado:", error);
-            alert(`Error: ${error}`);
-          }
-        },
-      });
-    } 
-    // else no hacer nada en modo editar por ahora
+  // VALIDACIÓN PREVIA EN LA VISTA
+  const nombre = this.jurado.nombre.trim();
+  const categoria = this.jurado.categoria.trim();
+  
+  if (nombre.length < 6) {
+    alert("El nombre debe tener al menos 6 caracteres.");
+    return;
   }
+  
+  if (categoria.length === 0) {
+    alert("Debe seleccionar una categoría.");
+    return;
+  }
+
+  // 🎯 LÓGICA DIFERENCIADA POR MODO
+  if (this.opcion === opcionFicha.add || this.opcion === null) {
+    // MODO AGREGAR
+    console.log("Intentando agregar jurado:", this.jurado.toJSON());
+    
+    this.controlador!.addJurado({
+      dtJurado: this.jurado.toJSON(),
+      callback: (error: string | boolean) => {
+        if (!error) { 
+          console.log("Jurado agregado exitosamente");
+          
+          this.jurado.nombre = this.inNombre.value = ""; 
+          this.jurado.categoria = this.inCategoria.value = "";
+          
+          this.mostrarJurado();
+          alert("Jurado agregado exitosamente.");
+          
+          // ✅ REGRESAR A MODO AGREGAR
+          this.opcion = opcionFicha.add;
+          this.refresh();
+        }
+        else {
+          console.error("Error al agregar jurado:", error);
+          alert(`Error: ${error}`);
+        }
+      },
+    });
+  } 
+  else if (this.opcion === opcionFicha.edit) {
+  // MODO EDITAR - ESTA ERA LA PARTE FALTANTE
+  console.log("🎯 EDITAR - Intentando editar jurado:", this.jurado.toJSON());
+  
+  this.controlador!.editJurado({
+    dtJurado: this.jurado.toJSON(),
+    callback: (error: string | boolean) => {
+      if (!error) { 
+        console.log("✅ EDITAR - Jurado editado exitosamente");
+        
+        this.jurado.nombre = this.inNombre.value = ""; 
+        this.jurado.categoria = this.inCategoria.value = "";
+        
+        // ✅ MEJORADO: FORZAR ACTUALIZACIÓN DE DATOS
+        console.log("🔄 EDITAR - Forzando actualización de datos...");
+        
+        // Usar setTimeout para asegurar que la BD se actualizó
+        setTimeout(() => {
+          console.log("🔄 EDITAR - Actualizando tabla después del timeout...");
+          this.mostrarJurado();
+        }, 100);
+        // ✅ FORZAR ACTUALIZACIÓN ADICIONAL DESDE CONTROLADOR
+console.log("🔄 EDITAR - Forzando recarga desde controlador...");
+const dtJuradoActualizado = this.controlador?.dtJurado;
+console.log("🔄 EDITAR - Datos desde controlador:", dtJuradoActualizado?.length, "jurados");
+console.log("🔄 EDITAR - Verificando datos:", dtJuradoActualizado?.map(j => `${j.nombre} (${j.categoria})`));
+
+// Actualizar tabla con datos frescos
+setTimeout(() => {
+  console.log("🔄 EDITAR - Segunda actualización de tabla...");
+  this.mostrarJurado();
+}, 50);
+        
+        // También llamar inmediatamente (por si funciona sin timeout)
+        console.log("🔄 EDITAR - Actualizando tabla inmediatamente...");
+        this.mostrarJurado();
+        
+        alert("Jurado editado exitosamente.");
+        
+        // ✅ REGRESAR A MODO AGREGAR
+        this.opcion = opcionFicha.add;
+        console.log("🔄 VISTA - Forzando actualización de tabla antes de cambiar vista...");
+        this.mostrarJurado();
+
+// Luego regresar a vista principal
+        console.log("🔄 VISTA - Regresando a vista principal...");
+        this.controlador!.activarVista({ vista: "jurado" });
+      }
+      else {
+        console.error("❌ EDITAR - Error al editar jurado:", error);
+        alert(`Error: ${error}`);
+      }
+    },
+  });
+}
+
+  }
+
+
+
   deleteJurado(nombre: string) {
     console.log("🗑️ Intentando eliminar jurado:", nombre);
     
@@ -138,48 +214,22 @@ export default class Cl_vJurado extends Cl_vGeneral {
     }
   }
   editarJurado(nombre: string) {
-    let jurado = this.controlador?.Jurado(nombre);
-    if (jurado)
-      this.controlador?.activarVista({
-        vista: "jurado",
-        opcion: opcionFicha.edit,
-        objeto: jurado,
-      });
-  }
-
-
-  /*mostrarJurado() {
-    this.divJurado.innerHTML = "";
-    let Jurado = this.controlador?.dtJurado; 
-    console.log("Vista recibe jurados:", Jurado); // CORREGIDO: Agregar Jurado
+  let jurado = this.controlador?.Jurado(nombre);
+  if (jurado) {
+    console.log("🎯 Activando modo editar para:", jurado.nombre);
     
-    if (!Jurado || Jurado.length === 0) {
-      this.divJurado.innerHTML = '<tr><td colspan="3">No hay jurados registrados</td></tr>';
-      return;
-    }
-    
-    Jurado.forEach(
-      (jurado: iJurado, index: number) =>
-        (this.divJurado.innerHTML += `<tr>
-            <td>${jurado.nombre}</td>
-            <td>${jurado.categoria}</td>
-            <td>
-                <button id="Jurado_btEditar_${index}">Editar</button>
-                <button id="Jurado_btEliminar_${index}">X</button>
-            </td>
-        </tr>`)
-    );
-
-   Jurado.forEach((Jurado: iJurado, index) => {
-      this.crearHTMLButtonElement(`btEditar_${index}`, {
-        onclick: () => this.editarJurado(Jurado.nombre),
-      });
-      this.crearHTMLButtonElement(`btEliminar_${index}`, {
-        onclick: () => this.deleteJurado(Jurado.nombre),
-      });
+    this.controlador?.activarVista({
+      vista: "jurado",
+      opcion: opcionFicha.edit,
+      objeto: jurado,
     });
+  } else {
+    console.error("❌ No se encontró el jurado:", nombre);
+    alert(`No se encontró el jurado "${nombre}"`);
+  }
 }
-    */
+  
+
    mostrarJurado() {
     this.divJurado.innerHTML = "";
     let Jurado = this.controlador?.dtJurado; 
@@ -213,8 +263,7 @@ export default class Cl_vJurado extends Cl_vGeneral {
       
       // 🔗 CONECTAR EL BOTÓN DE EDITAR
       const btnEditar = fila.querySelector(`#Jurado_btEditar_${index}`) as HTMLButtonElement;
-      btnEditar.addEventListener('click', () => {
-        alert(`Funcionalidad de editar "${jurado.nombre}" aún no implementada`);
+      btnEditar.addEventListener('click', () => { this.editarJurado(jurado.nombre);
       });
       
       this.divJurado.appendChild(fila);
@@ -224,41 +273,43 @@ export default class Cl_vJurado extends Cl_vGeneral {
   }
  
   show(
-    {
-      ver = false,
-      Jurado = new Cl_mJurado({
-        id: 0,
-        creadoEl: new Date().toISOString(),
-        alias: "",
-        nombre: "",
-        categoria: "",
-      }),
-      opcion,
-    }: { ver?: boolean; Jurado?: Cl_mJurado; opcion?: opcionFicha } = {
-      ver: false,
-      Jurado: new Cl_mJurado({
-        id: 0,
-        creadoEl: new Date().toISOString(),
-        alias: "",
-        nombre: "",
-        categoria: "",
-      }),
-    }
-  ): void {
-    super.show({ ver });
-    
-    if (opcion) {
-      this.opcion = opcion;
+  {
+    ver = false,
+    Jurado = new Cl_mJurado({
+      id: 0,
+      creadoEl: new Date().toISOString(),
+      alias: "",
+      nombre: "",
+      categoria: "",
+    }),
+    opcion,
+  }: { ver?: boolean; Jurado?: Cl_mJurado; opcion?: opcionFicha } = {
+    ver: false,
+    Jurado: new Cl_mJurado({
+      id: 0,
+      creadoEl: new Date().toISOString(),
+      alias: "",
+      nombre: "",
+      categoria: "",
+    }),
+  }
+): void {
+  super.show({ ver });
+  
+  if (opcion) {
+    this.opcion = opcion;
+    // ✅ MEJORADO: Solo asignar si el nombre no está vacío (modo editar)
+    if (Jurado!.nombre) {
       this.jurado.nombre = this.inNombre.value = Jurado!.nombre;
       this.jurado.categoria = this.inCategoria.value = Jurado!.categoria;
-      this.refresh();
     }
-    
-    // IMPORTANTE: Actualizar la tabla cada vez que se muestra la vista
-    if (ver) {
-      this.mostrarJurado();
-    }
+    this.refresh();
   }
+  
+  if (ver) {
+    this.mostrarJurado();
+  }
+}
 }
 
 
