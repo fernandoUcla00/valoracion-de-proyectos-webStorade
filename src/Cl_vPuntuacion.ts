@@ -74,7 +74,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         (this.inObservacion.style.borderColor = this.Puntuacion.observacion ? "" : "red"),
     });
     this.btAgregar = this.crearHTMLButtonElement("btAgregar", {
-      onclick: () => this.Agregar(),
+      onclick: () => this.AgregarPuntuacion(),
       refresh: () => {
         this.btAgregar.disabled = this.Puntuacion.PuntuacionOk !== true;
       },
@@ -84,18 +84,9 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
     });
    
   }
+ 
 
-  Agregar() {
-    if (this.opcion === opcionFicha.add)
-      this.controlador!.addPuntuacion({
-        dtPuntuacion: this.Puntuacion.toJSON(),
-        callback: (error?: string|false) => {
-          if (!error) this.controlador!.activarVista({ vista: "puntuacion" });
-          else alert(`Error: ${error}`);
-        },
-      });
-  }
-   addJurado() {
+   addPuntuacion() {
     // Si el botón tiene addJurado, el flujo correcto debe ser primero agregar y luego limpiar/refrescar.
     // Asumiendo que addJurado es solo para iniciar el modo ADD (como en el repositorio de referencia):
     this.controlador?.activarVista({
@@ -105,23 +96,35 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
   }
   
 
+  
   AgregarPuntuacion() {
-    if (this.opcion === opcionFicha.add)
-      this.controlador!.addPuntuacion({
-        dtPuntuacion: this.Puntuacion.toJSON(),
-        callback: (error: string | boolean) => {
-          if (!error){ 
-            // Limpiar inputs después de guardar
-            this.Puntuacion.Jurado = this.inJurado.value = ""; 
-            this.Puntuacion.equipo = this.inEquipo.value = "";
-           this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber || 0;
-            this.Puntuacion.observacion = this.inObservacion.value = "";
+  console.log("🎯 VISTA - Iniciando agregar puntuación...");
+  console.log("🎯 VISTA - Opción actual:", this.opcion);
+  
+  if (this.opcion === opcionFicha.add) {
+    console.log("✅ VISTA - Validaciones pasadas, agregando puntuación...");
+    
+    this.controlador!.addPuntuacion({
+      dtPuntuacion: this.Puntuacion.toJSON(),
+      callback: (error: string | boolean) => {
+        if (!error) {
+          console.log("✅ VISTA - Puntuación agregada exitosamente");
+          // Limpiar inputs después de guardar
+          this.Puntuacion.Jurado = this.inJurado.value = "";
+          this.Puntuacion.equipo = this.inEquipo.value = "";
+          this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber || 0;
+          this.Puntuacion.observacion = this.inObservacion.value = "";
+          this.refresh();
+        } else {
+          console.log("❌ VISTA - Error al agregar puntuación:", error);
+          alert(`Error: ${error}`);
         }
-          else alert(`Error: ${error}`);
-        },
-      });
-   
+      },
+    });
+  } else {
+    console.log("⚠️ VISTA - Opción no es 'add', es:", this.opcion);
   }
+}
 
 
 

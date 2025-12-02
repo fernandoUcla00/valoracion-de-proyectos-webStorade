@@ -25,8 +25,8 @@ export default class principal extends Cl_vGeneral {
         return super.controlador;
     }
     activarVista({ vista, opcion, objeto, }) {
-        this.show({ ver: vista === "principal" });
+        this.show({ ver: vista === "principal", });
         this.vJurado.show({ ver: vista === "jurado", Jurado: objeto, opcion });
-        this.vPuntuacion.show({ ver: vista === "puntuacion" });
+        this.vPuntuacion.show({ ver: vista === "puntuacion", opcion });
     }
 }

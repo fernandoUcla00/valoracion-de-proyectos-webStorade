@@ -5,7 +5,7 @@ export default class mPrincipal {
     constructor() {
         this.tbJurado = "Jurado";
         this.tbPuntuacion = "Puntuacion";
-        this.db = new Cl_dcytDb({ aliasCuenta: "PROFESOR" });
+        this.db = new Cl_dcytDb({ aliasCuenta: "TERANEXUS CORE" });
         this.Jurados = [];
         this.Puntuacion = [];
     }
@@ -63,8 +63,8 @@ export default class mPrincipal {
                                             }
                                         });
                                     }, 100);
-                                    callback(false);
                                 }
+                                callback(false);
                             }
                         });
                     }
@@ -108,21 +108,32 @@ export default class mPrincipal {
     }
     // codigo para Puntuacion
     addPuntuacion({ dtPuntuacion, callback, }) {
+        console.log("🔢 MODELO - Intentando agregar puntuación:", dtPuntuacion);
         let Puntuacion = new Cl_mPuntuacion(dtPuntuacion);
         // Validar que la puntuación sea correcta
-        if (!Puntuacion.PuntuacionOk)
+        if (!Puntuacion.PuntuacionOk) {
+            console.error("❌ MODELO - Puntuación inválida:", Puntuacion);
             callback("La puntuación no es correcta.");
-        else
-            this.db.addRecord({
-                tabla: this.tbPuntuacion,
-                registroAlias: dtPuntuacion.equipo,
-                object: Puntuacion,
-                callback: ({ id, objects: Puntuaciones, error }) => {
-                    if (!error)
-                        this.llenarPuntuacion(Puntuaciones);
-                    callback === null || callback === void 0 ? void 0 : callback(error);
-                },
-            });
+            return;
+        }
+        console.log("✅ MODELO - Puntuación válida, guardando en BD...");
+        this.db.addRecord({
+            tabla: this.tbPuntuacion,
+            registroAlias: `${dtPuntuacion.equipo.replace(/[^A-Z]/g, '').substring(0, 8)}_${(Date.now() % 10000).toString().padStart(4, '0')}`,
+            object: Puntuacion,
+            callback: ({ id, objects: Puntuacion, error }) => {
+                if (!error) {
+                    console.log("✅ MODELO - Puntuación guardada exitosamente");
+                    console.log("🔢 MODELO - Datos recibidos de BD:", Puntuacion);
+                    this.llenarPuntuacion(Puntuacion);
+                    console.log("🔢 MODELO - Array Puntuacion actualizado:", this.Puntuacion.length, "elementos");
+                }
+                else {
+                    console.error("❌ MODELO - Error guardando puntuación:", error);
+                }
+                callback === null || callback === void 0 ? void 0 : callback(error);
+            },
+        });
     }
     dtJurado() {
         console.log("🔍 MODELO - dtJurado() llamado - Retornando:", this.Jurados.length, "jurados");

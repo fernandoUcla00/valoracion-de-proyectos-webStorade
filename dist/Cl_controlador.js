@@ -55,4 +55,13 @@ export default class Cl_controlador {
     activarVista({ vista, opcion, objeto, puntuacion, }) {
         this.vista.activarVista({ vista, opcion, objeto, puntuacion });
     }
+    verificarEstadoPuntuaciones() {
+        console.log("🔍 CONTROLADOR - ===== ESTADO ACTUAL DE PUNTUACIONES =====");
+        console.log("🔍 CONTROLADOR - Total de puntuaciones:", this.dtPuntuacion.length);
+        console.log("🔍 CONTROLADOR - Detalles:");
+        this.dtPuntuacion.forEach((p, index) => {
+            console.log(`  ${index + 1}. Equipo: ${p.equipo} | Jurado: ${p.Jurado} | Puntuación: ${p.puntuacionMax} | Observación: ${p.observacion}`);
+        });
+        console.log("🔍 CONTROLADOR - ===== FIN VERIFICACIÓN =====");
+    }
 }

@@ -17,7 +17,7 @@ export default class mPrincipal {
   readonly tbJurado: string = "Jurado";
   readonly tbPuntuacion: string = "Puntuacion";
   constructor() {
-    this.db = new Cl_dcytDb({ aliasCuenta: "PROFESOR" });
+    this.db = new Cl_dcytDb({ aliasCuenta: "TERANEXUS CORE" });
     this.Jurados = [];
     this.Puntuacion = [];
   }
@@ -89,9 +89,10 @@ export default class mPrincipal {
       }
     });
   }, 100);
-  
+
+}
   callback(false);
-            }
+  }
 
           });
         } else {
@@ -101,7 +102,6 @@ export default class mPrincipal {
       },
     });
 }
-
 
   deleteJurado({
     nombre,
@@ -144,26 +144,41 @@ export default class mPrincipal {
 
 // codigo para Puntuacion
 
- addPuntuacion({
+ 
+  addPuntuacion({
   dtPuntuacion,
   callback,
 }: {
   dtPuntuacion: iPuntuacion;
   callback: (error: string | false) => void;
 }): void {
+  console.log("🔢 MODELO - Intentando agregar puntuación:", dtPuntuacion);
   let Puntuacion = new Cl_mPuntuacion(dtPuntuacion);
+  
   // Validar que la puntuación sea correcta
-  if (!Puntuacion.PuntuacionOk) callback("La puntuación no es correcta.");
-  else
-    this.db.addRecord({
-      tabla: this.tbPuntuacion,
-      registroAlias: dtPuntuacion.equipo,
-      object: Puntuacion,
-      callback: ({ id, objects: Puntuaciones, error }) => {
-        if (!error) this.llenarPuntuacion(Puntuaciones);
-        callback?.(error);
-      },
-    });
+  if (!Puntuacion.PuntuacionOk) {
+    console.error("❌ MODELO - Puntuación inválida:", Puntuacion);
+    callback("La puntuación no es correcta.");
+    return;
+  }
+  
+  console.log("✅ MODELO - Puntuación válida, guardando en BD...");
+  this.db.addRecord({
+    tabla: this.tbPuntuacion,
+    registroAlias: `${dtPuntuacion.equipo.replace(/[^A-Z]/g, '').substring(0, 8)}_${(Date.now() % 10000).toString().padStart(4, '0')}`,
+    object: Puntuacion,
+    callback: ({ id, objects: Puntuacion, error }) => {
+      if (!error) {
+        console.log("✅ MODELO - Puntuación guardada exitosamente");
+        console.log("🔢 MODELO - Datos recibidos de BD:", Puntuacion);
+        this.llenarPuntuacion(Puntuacion);
+        console.log("🔢 MODELO - Array Puntuacion actualizado:", this.Puntuacion.length, "elementos");
+      } else {
+        console.error("❌ MODELO - Error guardando puntuación:", error);
+      }
+      callback?.(error);
+    },
+  });
 }
 
   
@@ -183,6 +198,7 @@ export default class mPrincipal {
     let Jurado = this.Jurados.find((m) => m.nombre === nombre);
     return Jurado ? Jurado : null;
   }
+  
   cargar(callback: (error: string | false) => void): void {
     // Obtener la información desde la Web Storage
     this.db.listRecords({
