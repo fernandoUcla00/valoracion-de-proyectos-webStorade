@@ -1,7 +1,7 @@
 //import Cl_mP, { iJurado } from "./Cl_mJurado.js";
 import Cl_mJurado, { iJurado } from "./Cl_mJurado.js";
 import { iPuntuacion } from "./Cl_mPuntuacion.js";
-import mPrincipal from "./mPrincipal.js";
+import mPrincipal, {iResultadoReporte} from "./mPrincipal.js";
 import principal from "./principal.js";
 import { opcionFicha } from "./tools/core.tools.js";
 
@@ -79,13 +79,20 @@ get dtJurado(): iJurado[] {
   });
 }
   
-  
 get dtPuntuacion(): iPuntuacion[] {
   let dtPuntuacion = this.modelo.dtPuntuacion();
   console.log("Controlador está retornando estas puntuaciones:", dtPuntuacion);
   dtPuntuacion.sort((a, b) => a.equipo.localeCompare(b.equipo));
   return dtPuntuacion;
 }
+
+
+
+//codigo para Reporte
+get dtReporte(): iResultadoReporte[] {
+    // Solicita el reporte al modelo
+    return this.modelo.generarReporte();
+  }
 
   activarVista({
   vista,
@@ -98,7 +105,7 @@ get dtPuntuacion(): iPuntuacion[] {
   objeto?: Cl_mJurado;
   puntuacion?: iPuntuacion;
 }): void {
-(this.vista as any).activarVista({ vista, opcion, objeto, puntuacion });
+(this.vista as any).activarVista({ vista, opcion, objeto, puntuacion, controlador: this });
 }
 
 

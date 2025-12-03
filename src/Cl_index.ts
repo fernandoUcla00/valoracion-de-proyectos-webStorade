@@ -37,14 +37,20 @@ import principal from "./principal.js";
 export default class Cl_index {
  constructor() {
     let modelo = new mPrincipal();
-    modelo.cargar((error: string | false) => {
+       modelo.cargar((error: string | false) => {
       if (error) alert(error);
       if (error) throw new Error(error);
+      
       let vista = new principal();
       let controlador = new Cl_controlador(modelo, vista);
       vista.controlador = controlador;
+      
+      // 🔄 GENERAR REPORTE INICIAL AUTOMÁTICAMENTE
+      console.log("🚀 INDEX - Generando reporte inicial...");
+      const reporte = modelo.generarReporte();
+      console.log("🚀 INDEX - Reporte inicial generado:", reporte.length, "equipos");
+      
       vista.refresh();
-     
     });
   }
 }

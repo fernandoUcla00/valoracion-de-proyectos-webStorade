@@ -9,6 +9,15 @@ interface iResultPuntuacion {
   Puntuacion: [iPuntuacion] | null;
   error: string | false;
 }
+export interface iResultadoReporte {
+  nombre_equipo: string;
+  suma_ponderada: number;
+  peso_total: number;
+  promedio: number; // Esto será la base para el ranking (el campo 'ranking' de la imagen con decimales)
+  expresionMatematica: string; // Ejemplo: "85×20 + 80×10 + 79×1 = 2459"
+  expresionPesos: string; // Ejemplo: "20 + 10 + 1 = 31"
+  ranking: number; // Posición en la clasificación (1, 2, 3, ...)
+}
 
 export default class mPrincipal {
   private db: Cl_dcytDb;
@@ -40,7 +49,11 @@ export default class mPrincipal {
         registroAlias: dtJurado.categoria,
         object: Jurado,
         callback: ({ id, objects: Jurados, error }) => {
-          if (!error) this.llenarJurados(Jurados);
+          if (!error) {
+            this.llenarJurados(Jurados);
+            this.sincronizarWebStorage(); // 💾 Guardar en web storage
+            console.log("✅ MODELO - Jurado agregado y sincronizado");
+          }
           console.log("ID nuevo Jurado:", this.Jurados);
           callback?.(error);
         },
@@ -123,6 +136,8 @@ export default class mPrincipal {
     console.log("🔍 Buscando jurado con nombre:", nombreTrim);
     
     let indice = this.Jurados.findIndex((m) => m.nombre === nombreTrim);
+
+                
     // Verificar si la Jurado existe
     if (indice === -1) {
       console.error("❌ Jurado no encontrado:", nombreTrim);
@@ -136,6 +151,7 @@ export default class mPrincipal {
           object: this.Jurados[indice],
           callback: ({ objects: Jurados, error }) => {
             if (!error) this.llenarJurados(Jurados);
+            this.sincronizarWebStorage(); // 💾 Guardar en web storage
             callback?.(error);
           },
         });
@@ -173,6 +189,8 @@ export default class mPrincipal {
         console.log("🔢 MODELO - Datos recibidos de BD:", Puntuacion);
         this.llenarPuntuacion(Puntuacion);
         console.log("🔢 MODELO - Array Puntuacion actualizado:", this.Puntuacion.length, "elementos");
+        this.sincronizarWebStorage(); // 💾 Guardar en web storage
+        console.log("🔢 MODELO - Array Puntuacion actualizado:", this.Puntuacion.length, "elementos");
       } else {
         console.error("❌ MODELO - Error guardando puntuación:", error);
       }
@@ -181,7 +199,116 @@ export default class mPrincipal {
   });
 }
 
-  
+
+// codigo para reporte
+determinarPesoJurado(categoria: string): number {
+    switch (categoria) {
+      case 'Maestro': return 20;
+      case 'Autoridad': return 5;
+      case 'Docente': return 5;
+      case 'Invitado': return 1;
+      default: return 1;
+    }
+  }
+
+    generarReporte(): iResultadoReporte[] {
+    console.log("🔍 MODELO - Iniciando generarReporte()");
+    console.log("🔍 MODELO - Puntuaciones disponibles:", this.Puntuacion.length);
+    console.log("🔍 MODELO - Jurados disponibles:", this.Jurados.length);
+    
+    const resultadosPorEquipo: { [equipo: string]: { puntuaciones: { puntuacion: number; categoriaJurado: string }[] } } = {};
+
+    // 1. Agrupar las puntuaciones por equipo y obtener la categoría del jurado
+    this.Puntuacion.forEach((puntuacion, index) => {
+        const equipo = puntuacion.equipo;
+        const jurado = this.Jurado(puntuacion.Jurado); // Busca el objeto Jurado por nombre
+
+        console.log(`🔍 MODELO - Procesando puntuación ${index + 1}: Equipo=${equipo}, Jurado=${puntuacion.Jurado}, Puntuacion=${puntuacion.puntuacionMax}`);
+
+        if (!equipo || equipo.trim() === "") {
+            console.warn("⚠️ MODELO - Equipo vacío encontrado, omitiendo...");
+            return;
+        }
+
+        if (!resultadosPorEquipo[equipo]) {
+            resultadosPorEquipo[equipo] = { puntuaciones: [] };
+        }
+
+        if (jurado && puntuacion.puntuacionMax >= 0) {
+            resultadosPorEquipo[equipo].puntuaciones.push({
+                puntuacion: Number(puntuacion.puntuacionMax), // Asegurar que sea un número
+                categoriaJurado: jurado.categoria // Usamos la categoría del Jurado
+            });
+            console.log(`✅ MODELO - Puntuación válida agregada para ${equipo}: ${puntuacion.puntuacionMax}pts x ${this.determinarPesoJurado(jurado.categoria)} (${jurado.categoria})`);
+        } else {
+            console.warn(`⚠️ MODELO - Puntuación omitida: jurado no encontrado=${!jurado}, puntuación inválida=${puntuacion.puntuacionMax}`);
+        }
+    });
+    
+    console.log("🔍 MODELO - Resultados por equipo agrupados:", Object.keys(resultadosPorEquipo));
+    
+    const resultados: iResultadoReporte[] = [];
+
+    // 2. Calcular la ponderación y el promedio para cada equipo
+    for (const equipo in resultadosPorEquipo) {
+        const data = resultadosPorEquipo[equipo].puntuaciones;
+
+        let sumaPonderada = 0;
+        let pesoTotal = 0;
+        const componentes: string[] = [];
+        const pesosComponentes: string[] = [];
+
+        console.log(`🔍 MODELO - Calculando para equipo ${equipo}: ${data.length} puntuaciones`);
+
+        data.forEach(({ puntuacion, categoriaJurado }) => {
+            const peso = this.determinarPesoJurado(categoriaJurado);
+            const producto = puntuacion * peso;
+
+            sumaPonderada += producto;
+            pesoTotal += peso;
+
+            // Formato para las expresiones matemáticas (como en la imagen)
+            componentes.push(`${puntuacion}×${peso}`);
+            pesosComponentes.push(`${peso}`);
+            
+            console.log(`🔍 MODELO - Componente: ${puntuacion}×${peso} = ${producto}`);
+        });
+
+        const promedio = pesoTotal > 0 ? (sumaPonderada / pesoTotal) : 0;
+        const expresionMatematica = `${componentes.join(' + ')} = ${sumaPonderada}`;
+        const expresionPesos = `${pesosComponentes.join(' + ')} = ${pesoTotal}`;
+
+        const resultado = {
+            nombre_equipo: equipo,
+            suma_ponderada: sumaPonderada,
+            peso_total: pesoTotal,
+            promedio: Math.round(promedio * 100) / 100,
+            expresionMatematica,
+            expresionPesos,
+            ranking: 0 // Se actualizará en el paso 3
+        };
+        
+        console.log(`🔍 MODELO - Resultado ${equipo}: promedio=${resultado.promedio}%`);
+
+        resultados.push(resultado);
+    }
+
+    // 3. Ordenar por promedio (de mayor a menor) y asignar el ranking
+    resultados.sort((a, b) => b.promedio - a.promedio);
+
+    resultados.forEach((r, index) => {
+        r.ranking = index + 1;
+    });
+
+    console.log("📊 MODELO - Reporte final generado:", resultados);
+    
+    // 💾 GUARDAR EN WEB STORAGE PARA PERSISTENCIA
+    this.guardarEnWebStorage(resultados);
+    
+    return resultados;
+  }
+
+
 
 
   dtJurado(): iJurado[] {
@@ -199,28 +326,65 @@ export default class mPrincipal {
     return Jurado ? Jurado : null;
   }
   
-  cargar(callback: (error: string | false) => void): void {
-    // Obtener la información desde la Web Storage
+     cargar(callback: (error: string | false) => void): void {
+    console.log("🔄 MODELO - Iniciando carga de datos...");
+    
+    // 💾 PRIMERO: Cargar desde Web Storage como respaldo
+    const datosLocales = this.cargarDesdeWebStorage();
+    
     this.db.listRecords({
       tabla: this.tbJurado,
       callback: ({ objects, error }: iResultJurados) => {
-        if (error) callback(`Error cargando Jurados: ${error}`);
-        else
+        if (error) {
+          console.warn("⚠️ MODELO - Error cargando de BD, usando Web Storage:", error);
+          // Si falla la BD, usar datos locales de Web Storage
+          if (datosLocales.jurados.length > 0 || datosLocales.puntuaciones.length > 0) {
+            this.llenarJurados(datosLocales.jurados);
+            this.llenarPuntuacion(datosLocales.puntuaciones);
+            console.log("✅ MODELO - Datos cargados desde Web Storage");
+            
+            // Generar reporte con datos locales
+            const reporte = this.generarReporte();
+            console.log("📊 MODELO - Reporte generado con datos locales:", reporte.length, "equipos");
+            
+            callback(false);
+          } else {
+            console.log("ℹ️ MODELO - BD sin datos y Web Storage vacío");
+            this.llenarJurados([]);
+            this.llenarPuntuacion([]);
+            callback(false);
+          }
+        } else {
+          // ✅ BD DISPONIBLE - Cargar desde BD
           this.db.listRecords({
             tabla: this.tbPuntuacion,
             callback: ({ Puntuacion, error }: iResultPuntuacion) => {
-              if (error) callback(`Error cargando Puntuacions: ${error}`);
-              else {
+              if (error) {
+                console.warn("⚠️ MODELO - Error cargando puntuaciones de BD:", error);
+                // Combinar BD con datos locales si existen
+                this.llenarJurados(objects ?? []);
+                this.llenarPuntuacion(datosLocales.puntuaciones);
+              } else {
                 this.llenarJurados(objects ?? []);
                 this.llenarPuntuacion(Puntuacion ?? []);
-                callback(false);
               }
+              
+              // 💾 SINCRONIZAR CON WEB STORAGE
+              this.sincronizarWebStorage();
+              
+              // 📊 GENERAR REPORTE INICIAL
+              console.log("📊 MODELO - Generando reporte inicial...");
+              const reporte = this.generarReporte();
+              console.log("📊 MODELO - Reporte inicial generado:", reporte.length, "equipos");
+              
+              console.log("🔄 MODELO - Datos cargados exitosamente:");
+              console.log(`   - Jurados: ${this.Jurados.length}`);
+              console.log(`   - Puntuaciones: ${this.Puntuacion.length}`);
+              callback(false);
             },
           });
-           console.log("🔄 MODELO - llenarJurados() llamado con:", this.Jurados.length, "jurados");
-        console.log("🔄 MODELO - Datos recibidos:", this.Jurados);
+        }
       },
-      
     });
   }
   llenarJurados(Jurados: iJurado[]): void {
@@ -235,4 +399,60 @@ export default class mPrincipal {
       this.Puntuacion.push(new Cl_mPuntuacion(Puntuacion))
     );
   }
+    // 💾 MÉTODOS PARA PERSISTENCIA WEB STORAGE
+    // 💾 MÉTODOS WEB STORAGE COMPLETOS
+  private guardarEnWebStorage(resultadosReporte?: iResultadoReporte[]): void {
+    try {
+      const datos = {
+        jurados: this.Jurados.map(j => j.toJSON()),
+        puntuaciones: this.Puntuacion.map(p => p.toJSON()),
+        reporte: resultadosReporte || null,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('sistemaJurados_webStorage', JSON.stringify(datos));
+      console.log("💾 WEB STORAGE - Datos guardados exitosamente");
+    } catch (error) {
+      console.error("❌ WEB STORAGE - Error guardando:", error);
+    }
+  }
+
+  private cargarDesdeWebStorage(): { jurados: iJurado[]; puntuaciones: iPuntuacion[]; reporte?: iResultadoReporte[] } {
+    try {
+      const datosStr = localStorage.getItem('sistemaJurados_webStorage');
+      if (datosStr) {
+        const datos = JSON.parse(datosStr);
+        console.log("💾 WEB STORAGE - Datos cargados:", datos.jurados?.length, "jurados,", datos.puntuaciones?.length, "puntuaciones");
+        return {
+          jurados: datos.jurados || [],
+          puntuaciones: datos.puntuaciones || [],
+          reporte: datos.reporte || null
+        };
+      }
+    } catch (error) {
+      console.error("❌ WEB STORAGE - Error cargando:", error);
+    }
+    return { jurados: [], puntuaciones: [] };
+  }
+
+  private sincronizarWebStorage(): void {
+    try {
+      if (this.Jurados.length > 0 || this.Puntuacion.length > 0) {
+        this.guardarEnWebStorage();
+      }
+    } catch (error) {
+      console.error("❌ WEB STORAGE - Error sincronizando:", error);
+    }
+  }
+
+  limpiarWebStorage(): void {
+    try {
+      localStorage.removeItem('sistemaJurados_webStorage');
+      console.log("🗑️ WEB STORAGE - Datos eliminados");
+    } catch (error) {
+      console.error("❌ WEB STORAGE - Error limpiando:", error);
+    }
+  }
+  
+ 
 }

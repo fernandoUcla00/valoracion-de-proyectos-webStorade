@@ -39,9 +39,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         });
         this.inPuntuacionMax = this.crearHTMLInputElement("inPuntuacionMax", {
             oninput: () => {
-                const valor = this.inPuntuacionMax.valueAsNumber;
-                this.Puntuacion.puntuacionMax = isNaN(valor) ? 0 : valor;
-                this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax;
+                this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber;
                 this.refresh();
             },
             refresh: () => (this.inPuntuacionMax.style.borderColor = this.Puntuacion.PuntuacionMaxOk ? "" : "red"),

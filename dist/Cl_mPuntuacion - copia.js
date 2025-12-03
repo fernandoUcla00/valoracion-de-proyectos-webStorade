@@ -44,6 +44,19 @@ export default class Cl_mPuntuacion extends Cl_mTablaWeb {
     get PuntuacionMaxOk() {
         return this.puntuacionMax >= 0 && this.puntuacionMax <= 100;
     }
+    static determinarPesoJurado(categoria) {
+        const categoriaLower = categoria.toLowerCase();
+        if (categoriaLower.includes('maestro')) {
+            return 20;
+        }
+        else if (categoriaLower.includes('autoridad') || categoriaLower.includes('docente')) {
+            return 5;
+        }
+        else {
+            // Invitado, etc.
+            return 1;
+        }
+    }
     calcularPromedio() {
         // Lógica para calcular el promedio
         return 0; // Valor de ejemplo

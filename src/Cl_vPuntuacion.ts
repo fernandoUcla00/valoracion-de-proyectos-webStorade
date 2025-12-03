@@ -57,8 +57,9 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
 
     this.inPuntuacionMax = this.crearHTMLInputElement("inPuntuacionMax", {
       oninput: () => {
-        this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber
-  
+        const valor = this.inPuntuacionMax.valueAsNumber;
+        this.Puntuacion.puntuacionMax = isNaN(valor) ? 0 : valor;
+        this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax;
         this.refresh();
       },
       refresh: () =>
@@ -112,7 +113,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
           // Limpiar inputs después de guardar
           this.Puntuacion.Jurado = this.inJurado.value = "";
           this.Puntuacion.equipo = this.inEquipo.value = "";
-          this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber || 0;
+          this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber;
           this.Puntuacion.observacion = this.inObservacion.value = "";
           this.refresh();
         } else {
