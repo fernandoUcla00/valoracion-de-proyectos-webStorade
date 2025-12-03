@@ -157,10 +157,12 @@ export default class mPrincipal {
     }
   }
 
+
+
 // codigo para Puntuacion
 
  
-  addPuntuacion({
+ addPuntuacion({
   dtPuntuacion,
   callback,
 }: {
@@ -174,6 +176,22 @@ export default class mPrincipal {
   if (!Puntuacion.PuntuacionOk) {
     console.error("❌ MODELO - Puntuación inválida:", Puntuacion);
     callback("La puntuación no es correcta.");
+    return;
+  }
+  
+  // ✅ VALIDACIÓN FINAL: Verificar duplicados antes de guardar
+  const puntuacionesExistentes = this.Puntuacion.map(p => p.toJSON());
+  
+  if (!Cl_mPuntuacion.puedePuntuarJuradoEquipo(
+    dtPuntuacion.Jurado, 
+    dtPuntuacion.equipo, 
+    puntuacionesExistentes
+  )) {
+    console.error("❌ MODELO - Validación fallida: El jurado ya puntúo este equipo");
+    callback(Cl_mPuntuacion.obtenerErrorJuradoYaPuntuo(
+      dtPuntuacion.Jurado, 
+      dtPuntuacion.equipo
+    ));
     return;
   }
   
@@ -303,7 +321,7 @@ determinarPesoJurado(categoria: string): number {
     return Jurado ? Jurado : null;
   }
   
-     cargar(callback: (error: string | false) => void): void {
+    cargar(callback: (error: string | false) => void): void {
     console.log("🔄 MODELO - Iniciando carga de datos...");
     
     // 💾 PRIMERO: Cargar desde Web Storage como respaldo

@@ -11,6 +11,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
   private btCancelar: HTMLButtonElement;
   private Puntuacion: Cl_mPuntuacion;
   private opcion: opcionFicha | null;
+  private tablaValoraciones: HTMLTableSectionElement;
   
   constructor() {
     // La sección se llama "puntuacion" en el HTML; usar el mismo id
@@ -50,8 +51,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         this.refresh();
       },
       refresh: () =>
-        (this.inEquipo.style.borderColor = this.Puntuacion.equipo ? "" : "red"),
-
+       (this.inEquipo.style.borderColor = this.Puntuacion.equipo ? "" : "red"),
 
     }) as HTMLSelectElement;
 
@@ -62,8 +62,9 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax;
         this.refresh();
       },
+
       refresh: () =>
-       (this.inPuntuacionMax.style.borderColor = this.Puntuacion.PuntuacionMaxOk ? "" : "red"),
+       this.inObservacion.value = this.Puntuacion.observacion = this.inObservacion.value
     });
     this.inPuntuacionMax.disabled = this.opcion === opcionFicha.edit;
     this.inObservacion = this.crearHTMLInputElement("inObservacion", {
@@ -75,16 +76,30 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         (this.inObservacion.style.borderColor = this.Puntuacion.observacion ? "" : "red"),
     });
     this.btAgregar = this.crearHTMLButtonElement("btAgregar", {
-      onclick: () => this.AgregarPuntuacion(),
-      refresh: () => {
-        this.btAgregar.disabled = this.Puntuacion.PuntuacionOk !== true;
-      },
-    });
+  onclick: () => this.AgregarPuntuacion(),
+  refresh: () => {
+     this.btAgregar.disabled = this.Puntuacion.PuntuacionOk !== true;
+  },
+});
     this.btCancelar = this.crearHTMLButtonElement("btVolver", {
-      onclick: () => this.controlador!.activarVista({ vista: "principal" }),
-    });
-   
+  onclick: () => this.controlador!.activarVista({ vista: "principal" }),
+});
+
+
+    this.tablaValoraciones = this.crearHTMLElement("tablaValoraciones", {
+      type: tHTMLElement.CONTAINER,
+      refresh: () => {this.mostrarTablaValoraciones();
+ setTimeout(() => {
+    this.mostrarTablaValoraciones();
+  }, 50);
+  setTimeout(() => {
+    this.mostrarTablaValoraciones();
+  }, 100);
+},
+    }) as HTMLTableSectionElement;
   }
+   
+  
  
 
    addPuntuacion() {
@@ -95,10 +110,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
       opcion: opcionFicha.add,
     });
   }
-  
-
-  
-  AgregarPuntuacion() {
+   AgregarPuntuacion() {
   console.log("🎯 VISTA - Iniciando agregar puntuación...");
   console.log("🎯 VISTA - Opción actual:", this.opcion);
   
@@ -115,6 +127,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
           this.Puntuacion.equipo = this.inEquipo.value = "";
           this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber;
           this.Puntuacion.observacion = this.inObservacion.value = "";
+          alert("Puntuación agregada exitosamente.");
           this.refresh();
         } else {
           console.log("❌ VISTA - Error al agregar puntuación:", error);
@@ -127,7 +140,37 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
   }
 }
 
+  
+ 
 
+mostrarTablaValoraciones() {
+  this.tablaValoraciones.innerHTML = "";
+  const puntuaciones = this.controlador?.dtPuntuacion || [];
+  
+  console.log("📋 VISTA - Mostrando tabla de valoraciones:", puntuaciones.length, "puntuaciones");
+  
+  if (puntuaciones.length === 0) {
+    this.tablaValoraciones.innerHTML = `
+      <tr>
+        <td colspan="3" style="text-align: center; color: #666; padding: 20px;">No hay valoraciones registradas</td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Agregar filas para cada puntuación
+  puntuaciones.forEach((puntuacion: iPuntuacion) => {
+    const fila = document.createElement('tr');
+    fila.innerHTML = `
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.Jurado}</td>
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.equipo}</td>
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.puntuacionMax}</td>
+    `;
+    this.tablaValoraciones.appendChild(fila);
+  });
+  
+  console.log("✅ VISTA - Tabla de valoraciones actualizada con", puntuaciones.length, "puntuaciones");
+}
 
   show(
     {
@@ -162,5 +205,10 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
       this.Puntuacion.equipo = this.inEquipo.value = Puntuacion!.equipo;
       this.refresh();
     }
+    // ✅ ACTUALIZAR TABLA: Siempre actualizar la tabla cuando se muestre la vista
+    if (ver) {
+      this.mostrarTablaValoraciones();
+    }
   }
+
 }

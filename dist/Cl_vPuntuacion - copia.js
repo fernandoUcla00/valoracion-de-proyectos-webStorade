@@ -39,7 +39,9 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         });
         this.inPuntuacionMax = this.crearHTMLInputElement("inPuntuacionMax", {
             oninput: () => {
-                this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber;
+                const valor = this.inPuntuacionMax.valueAsNumber;
+                this.Puntuacion.puntuacionMax = isNaN(valor) ? 0 : valor;
+                this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax;
                 this.refresh();
             },
             refresh: () => (this.inPuntuacionMax.style.borderColor = this.Puntuacion.PuntuacionMaxOk ? "" : "red"),
@@ -61,6 +63,10 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         this.btCancelar = this.crearHTMLButtonElement("btVolver", {
             onclick: () => this.controlador.activarVista({ vista: "principal" }),
         });
+        this.tablaValoraciones = this.crearHTMLElement("tablaValoraciones", {
+            type: tHTMLElement.CONTAINER,
+            refresh: () => this.mostrarTablaValoraciones(),
+        });
     }
     addPuntuacion() {
         var _a;
@@ -76,6 +82,11 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         console.log("🎯 VISTA - Opción actual:", this.opcion);
         if (this.opcion === opcionFicha.add) {
             console.log("✅ VISTA - Validaciones pasadas, agregando puntuación...");
+            const puntuacionesActuales = this.controlador.dtPuntuacion;
+            if (!Cl_mPuntuacion.puedePuntuarJuradoEquipo(this.Puntuacion.Jurado, this.Puntuacion.equipo, puntuacionesActuales)) {
+                alert(Cl_mPuntuacion.obtenerErrorJuradoYaPuntuo(this.Puntuacion.Jurado, this.Puntuacion.equipo));
+                return;
+            }
             this.controlador.addPuntuacion({
                 dtPuntuacion: this.Puntuacion.toJSON(),
                 callback: (error) => {
@@ -98,6 +109,34 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         else {
             console.log("⚠️ VISTA - Opción no es 'add', es:", this.opcion);
         }
+    }
+    /**
+     * ✅ Muestra la tabla de valoraciones con todas las puntuaciones registradas
+     */
+    mostrarTablaValoraciones() {
+        var _a;
+        this.tablaValoraciones.innerHTML = "";
+        const puntuaciones = ((_a = this.controlador) === null || _a === void 0 ? void 0 : _a.dtPuntuacion) || [];
+        console.log("📋 VISTA - Mostrando tabla de valoraciones:", puntuaciones.length, "puntuaciones");
+        if (puntuaciones.length === 0) {
+            this.tablaValoraciones.innerHTML = `
+      <tr>
+        <td colspan="3" style="text-align: center; color: #666; padding: 20px;">No hay valoraciones registradas</td>
+      </tr>
+    `;
+            return;
+        }
+        // Agregar filas para cada puntuación
+        puntuaciones.forEach((puntuacion) => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.Jurado}</td>
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.equipo}</td>
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.puntuacionMax}</td>
+    `;
+            this.tablaValoraciones.appendChild(fila);
+        });
+        console.log("✅ VISTA - Tabla de valoraciones actualizada con", puntuaciones.length, "puntuaciones");
     }
     show({ ver = false, Puntuacion = new Cl_mPuntuacion({
         id: 0,
@@ -125,6 +164,10 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
             this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber = Puntuacion.puntuacionMax;
             this.Puntuacion.equipo = this.inEquipo.value = Puntuacion.equipo;
             this.refresh();
+        }
+        // ✅ ACTUALIZAR TABLA: Siempre actualizar la tabla cuando se muestre la vista
+        if (ver) {
+            this.mostrarTablaValoraciones();
         }
     }
 }

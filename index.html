@@ -112,8 +112,25 @@
         </div>
         <div class="action-buttons">
             <button id="puntuacion_btAgregar" class="btn-primary">Agregar Puntuación</button>
+        
             <button id="puntuacion_btVolver" class="btn-secondary">Volver</button>
         </div>
+                <!-- ✅ TABLA DE VALORACIONES -->
+        <h4 style="margin-top: 2rem; margin-bottom: 1rem;">Valoraciones</h4>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr>
+                    <th style="background-color: #2C3E50; padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; font-weight: 600; color: #ffffff;">id_jurado</th>
+                    <th style="background-color: #2C3E50; padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; font-weight: 600; color: #ffffff;">id_equipo</th>
+                    <th style="background-color: #2C3E50; padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; font-weight: 600; color: #ffffff;">valoracion</th>
+                </tr>
+            </thead>
+            <tbody id="puntuacion_tablaValoraciones">
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #666; padding: 20px;">No hay valoraciones registradas</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <section id="reporte">

@@ -44,7 +44,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
                 this.inPuntuacionMax.valueAsNumber = this.Puntuacion.puntuacionMax;
                 this.refresh();
             },
-            refresh: () => (this.inPuntuacionMax.style.borderColor = this.Puntuacion.PuntuacionMaxOk ? "" : "red"),
+            refresh: () => this.inObservacion.value = this.Puntuacion.observacion = this.inObservacion.value
         });
         this.inPuntuacionMax.disabled = this.opcion === opcionFicha.edit;
         this.inObservacion = this.crearHTMLInputElement("inObservacion", {
@@ -62,6 +62,18 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         });
         this.btCancelar = this.crearHTMLButtonElement("btVolver", {
             onclick: () => this.controlador.activarVista({ vista: "principal" }),
+        });
+        this.tablaValoraciones = this.crearHTMLElement("tablaValoraciones", {
+            type: tHTMLElement.CONTAINER,
+            refresh: () => {
+                this.mostrarTablaValoraciones();
+                setTimeout(() => {
+                    this.mostrarTablaValoraciones();
+                }, 50);
+                setTimeout(() => {
+                    this.mostrarTablaValoraciones();
+                }, 100);
+            },
         });
     }
     addPuntuacion() {
@@ -88,6 +100,7 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
                         this.Puntuacion.equipo = this.inEquipo.value = "";
                         this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber;
                         this.Puntuacion.observacion = this.inObservacion.value = "";
+                        alert("Puntuación agregada exitosamente.");
                         this.refresh();
                     }
                     else {
@@ -100,6 +113,31 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
         else {
             console.log("⚠️ VISTA - Opción no es 'add', es:", this.opcion);
         }
+    }
+    mostrarTablaValoraciones() {
+        var _a;
+        this.tablaValoraciones.innerHTML = "";
+        const puntuaciones = ((_a = this.controlador) === null || _a === void 0 ? void 0 : _a.dtPuntuacion) || [];
+        console.log("📋 VISTA - Mostrando tabla de valoraciones:", puntuaciones.length, "puntuaciones");
+        if (puntuaciones.length === 0) {
+            this.tablaValoraciones.innerHTML = `
+      <tr>
+        <td colspan="3" style="text-align: center; color: #666; padding: 20px;">No hay valoraciones registradas</td>
+      </tr>
+    `;
+            return;
+        }
+        // Agregar filas para cada puntuación
+        puntuaciones.forEach((puntuacion) => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.Jurado}</td>
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.equipo}</td>
+      <td style="padding: 12px 15px; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: left; color: #333; background-color: #ffffff;">${puntuacion.puntuacionMax}</td>
+    `;
+            this.tablaValoraciones.appendChild(fila);
+        });
+        console.log("✅ VISTA - Tabla de valoraciones actualizada con", puntuaciones.length, "puntuaciones");
     }
     show({ ver = false, Puntuacion = new Cl_mPuntuacion({
         id: 0,
@@ -127,6 +165,10 @@ export default class Cl_vPuntuacion extends Cl_vGeneral {
             this.Puntuacion.puntuacionMax = this.inPuntuacionMax.valueAsNumber = Puntuacion.puntuacionMax;
             this.Puntuacion.equipo = this.inEquipo.value = Puntuacion.equipo;
             this.refresh();
+        }
+        // ✅ ACTUALIZAR TABLA: Siempre actualizar la tabla cuando se muestre la vista
+        if (ver) {
+            this.mostrarTablaValoraciones();
         }
     }
 }

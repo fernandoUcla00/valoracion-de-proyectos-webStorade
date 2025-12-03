@@ -57,6 +57,25 @@ export default class Cl_mPuntuacion extends Cl_mTablaWeb {
             return 1;
         }
     }
+    /**
+   * ✅ Valida si un jurado puede puntuar un equipo específico
+   * @param jurado Nombre del jurado
+   * @param equipo Nombre del equipo
+   * @param puntuacionesExistentes Array de puntuaciones existentes
+   * @returns true si el jurado puede puntuar, false si ya puntúo ese equipo
+   */
+    static puedePuntuarJuradoEquipo(jurado, equipo, puntuacionesExistentes) {
+        return !puntuacionesExistentes.some(p => p.Jurado === jurado && p.equipo === equipo);
+    }
+    /**
+     * Obtiene el mensaje de error específico cuando un jurado ya puntúo un equipo
+     * @param jurado Nombre del jurado
+     * @param equipo Nombre del equipo
+     * @returns Mensaje de error descriptivo
+     */
+    static obtenerErrorJuradoYaPuntuo(jurado, equipo) {
+        return `El jurado "${jurado}" ya ha puntuado al equipo "${equipo}". Un jurado solo puede puntuar cada equipo una vez.`;
+    }
     toJSON() {
         // unir los datos de la clase base con los de la clase derivada, usando super.toJSON()
         return Object.assign(Object.assign({}, super.toJSON()), { Jurado: this._Jurado, equipo: this._equipo, puntuacionMax: this._puntuacionMax, observacion: this._observacion });

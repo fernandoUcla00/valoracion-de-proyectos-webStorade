@@ -120,6 +120,13 @@ export default class mPrincipal {
             callback("La puntuación no es correcta.");
             return;
         }
+        // ✅ VALIDACIÓN FINAL: Verificar duplicados antes de guardar
+        const puntuacionesExistentes = this.Puntuacion.map(p => p.toJSON());
+        if (!Cl_mPuntuacion.puedePuntuarJuradoEquipo(dtPuntuacion.Jurado, dtPuntuacion.equipo, puntuacionesExistentes)) {
+            console.error("❌ MODELO - Validación fallida: El jurado ya puntúo este equipo");
+            callback(Cl_mPuntuacion.obtenerErrorJuradoYaPuntuo(dtPuntuacion.Jurado, dtPuntuacion.equipo));
+            return;
+        }
         console.log("✅ MODELO - Puntuación válida, guardando en BD...");
         this.db.addRecord({
             tabla: this.tbPuntuacion,
