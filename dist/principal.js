@@ -34,6 +34,7 @@ export default class principal extends Cl_vGeneral {
         }
         // Limpiar contenido existente
         tbodyExistente.innerHTML = "";
+        // Crear y agregar botón de salir
         if (resultados.length === 0) {
             tbodyExistente.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No hay datos para mostrar</td></tr>';
             return;
@@ -41,11 +42,12 @@ export default class principal extends Cl_vGeneral {
         resultados.forEach((r, index) => {
             const fila = document.createElement('tr');
             fila.innerHTML = `
-        <td style="padding: 8px; border: 1px solid #ddd;">${r.ranking}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${r.nombre_equipo}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${r.promedio.toFixed(2)}%</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${r.expresionMatematica}<br><small style="color: #666;">${r.expresionPesos}</small></td>
-      `;
+    <td style="padding: 8px; border: 1px solid #ddd;">${r.id_equipo}</td>
+    <td style="padding: 8px; border: 1px solid #ddd;">${r.nombre_equipo}</td>
+    <td style="padding: 8px; border: 1px solid #ddd;">${r.suma_ponderada}</td>
+    <td style="padding: 8px; border: 1px solid #ddd;">${r.peso_total}</td>
+    <td style="padding: 8px; border: 1px solid #ddd;">${r.puntaje_final.toFixed(2)}</td>
+  `;
             tbodyExistente.appendChild(fila);
         });
         console.log("✅ VISTA - Reporte generado y mostrado con", resultados.length, "equipos");

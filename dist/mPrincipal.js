@@ -143,43 +143,32 @@ export default class mPrincipal {
     }
     // codigo para reporte
     determinarPesoJurado(categoria) {
-        switch (categoria) {
-            case 'Maestro': return 20;
-            case 'Autoridad': return 5;
-            case 'Docente': return 5;
-            case 'Invitado': return 1;
+        console.log(`🔍 DEBUG - Calculando peso para categoría: "${categoria}"`);
+        switch (categoria.toLowerCase()) {
+            case 'maestro': return 20;
+            case 'autoridad': return 10;
+            case 'docente': return 10;
+            case 'experto': return 5;
+            case 'invitado': return 1;
             default: return 1;
         }
     }
     generarReporte() {
-        console.log("🔍 MODELO - Iniciando generarReporte()");
-        console.log("🔍 MODELO - Puntuaciones disponibles:", this.Puntuacion.length);
-        console.log("🔍 MODELO - Jurados disponibles:", this.Jurados.length);
         const resultadosPorEquipo = {};
         // 1. Agrupar las puntuaciones por equipo y obtener la categoría del jurado
-        this.Puntuacion.forEach((puntuacion, index) => {
-            const equipo = puntuacion.equipo;
-            const jurado = this.Jurado(puntuacion.Jurado); // Busca el objeto Jurado por nombre
-            console.log(`🔍 MODELO - Procesando puntuación ${index + 1}: Equipo=${equipo}, Jurado=${puntuacion.Jurado}, Puntuacion=${puntuacion.puntuacionMax}`);
-            if (!equipo || equipo.trim() === "") {
-                console.warn("⚠️ MODELO - Equipo vacío encontrado, omitiendo...");
-                return;
-            }
+        this.Puntuacion.forEach(p => {
+            const equipo = p.equipo;
+            const jurado = this.Jurado(p.Jurado); // Busca el objeto Jurado por nombre
             if (!resultadosPorEquipo[equipo]) {
                 resultadosPorEquipo[equipo] = { puntuaciones: [] };
             }
-            if (jurado && puntuacion.puntuacionMax >= 0) {
+            if (jurado) {
                 resultadosPorEquipo[equipo].puntuaciones.push({
-                    puntuacion: Number(puntuacion.puntuacionMax), // Asegurar que sea un número
+                    puntuacion: p.puntuacionMax,
                     categoriaJurado: jurado.categoria // Usamos la categoría del Jurado
                 });
-                console.log(`✅ MODELO - Puntuación válida agregada para ${equipo}: ${puntuacion.puntuacionMax}pts x ${this.determinarPesoJurado(jurado.categoria)} (${jurado.categoria})`);
-            }
-            else {
-                console.warn(`⚠️ MODELO - Puntuación omitida: jurado no encontrado=${!jurado}, puntuación inválida=${puntuacion.puntuacionMax}`);
             }
         });
-        console.log("🔍 MODELO - Resultados por equipo agrupados:", Object.keys(resultadosPorEquipo));
         const resultados = [];
         // 2. Calcular la ponderación y el promedio para cada equipo
         for (const equipo in resultadosPorEquipo) {
@@ -188,40 +177,37 @@ export default class mPrincipal {
             let pesoTotal = 0;
             const componentes = [];
             const pesosComponentes = [];
-            console.log(`🔍 MODELO - Calculando para equipo ${equipo}: ${data.length} puntuaciones`);
             data.forEach(({ puntuacion, categoriaJurado }) => {
                 const peso = this.determinarPesoJurado(categoriaJurado);
+                console.log(`🔍 DEBUG - Puntuación: ${puntuacion}, Categoría: "${categoriaJurado}", Peso: ${peso}`);
                 const producto = puntuacion * peso;
                 sumaPonderada += producto;
                 pesoTotal += peso;
                 // Formato para las expresiones matemáticas (como en la imagen)
                 componentes.push(`${puntuacion}×${peso}`);
                 pesosComponentes.push(`${peso}`);
-                console.log(`🔍 MODELO - Componente: ${puntuacion}×${peso} = ${producto}`);
             });
             const promedio = pesoTotal > 0 ? (sumaPonderada / pesoTotal) : 0;
             const expresionMatematica = `${componentes.join(' + ')} = ${sumaPonderada}`;
             const expresionPesos = `${pesosComponentes.join(' + ')} = ${pesoTotal}`;
-            const resultado = {
+            // Extraer número del nombre del equipo (ej: "Equipo 1" → "1" → "E01")
+            const numeroEquipo = equipo.replace(/[^0-9]/g, ''); // Extraer solo números
+            const idEquipo = `E${numeroEquipo.padStart(2, '0')}`; // Formato E01, E02, etc.
+            resultados.push({
+                id_equipo: idEquipo,
                 nombre_equipo: equipo,
-                suma_ponderada: sumaPonderada,
-                peso_total: pesoTotal,
-                promedio: Math.round(promedio * 100) / 100,
-                expresionMatematica,
-                expresionPesos,
+                suma_ponderada: expresionMatematica, // String con la fórmula
+                peso_total: expresionPesos, // String con la fórmula
+                puntaje_final: Math.round(promedio * 100) / 100, // Redondeado a 2 decimales
                 ranking: 0 // Se actualizará en el paso 3
-            };
-            console.log(`🔍 MODELO - Resultado ${equipo}: promedio=${resultado.promedio}%`);
-            resultados.push(resultado);
+            });
         }
-        // 3. Ordenar por promedio (de mayor a menor) y asignar el ranking
-        resultados.sort((a, b) => b.promedio - a.promedio);
+        // 3. Ordenar por puntaje_final (de mayor a menor) y asignar el ranking
+        resultados.sort((a, b) => b.puntaje_final - a.puntaje_final);
         resultados.forEach((r, index) => {
             r.ranking = index + 1;
         });
-        console.log("📊 MODELO - Reporte final generado:", resultados);
-        // 💾 GUARDAR EN WEB STORAGE PARA PERSISTENCIA
-        this.guardarEnWebStorage(resultados);
+        console.log("📊 MODELO - Reporte generado:", resultados);
         return resultados;
     }
     dtJurado() {

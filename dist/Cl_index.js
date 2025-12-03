@@ -40,10 +40,6 @@ export default class Cl_index {
             let vista = new principal();
             let controlador = new Cl_controlador(modelo, vista);
             vista.controlador = controlador;
-            // 🔄 GENERAR REPORTE INICIAL AUTOMÁTICAMENTE
-            console.log("🚀 INDEX - Generando reporte inicial...");
-            const reporte = modelo.generarReporte();
-            console.log("🚀 INDEX - Reporte inicial generado:", reporte.length, "equipos");
             vista.refresh();
         });
     }

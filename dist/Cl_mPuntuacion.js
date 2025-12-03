@@ -50,20 +50,12 @@ export default class Cl_mPuntuacion extends Cl_mTablaWeb {
             return 20;
         }
         else if (categoriaLower.includes('autoridad') || categoriaLower.includes('docente')) {
-            return 5;
+            return 10;
         }
         else {
             // Invitado, etc.
             return 1;
         }
-    }
-    calcularPromedio() {
-        // Lógica para calcular el promedio
-        return 0; // Valor de ejemplo
-    }
-    pocicionEnClasificacion() {
-        // Lógica para determinar la posición en la clasificación
-        return 0; // Valor de ejemplo
     }
     toJSON() {
         // unir los datos de la clase base con los de la clase derivada, usando super.toJSON()
